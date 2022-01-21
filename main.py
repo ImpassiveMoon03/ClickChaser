@@ -3,17 +3,24 @@ import pygame
 from pygame.locals import *
 import random
 from classes.Button import Button
+from pygame import mouse
 
 game_state = 0
 score = 0
 posx = 310
-posy = 40
+posy = 80
+step = 1
+cost = round((step/0.4)*(step/0.4))
+high_score = 0
 
 class Main():
     global game_state
     global score
     global posx
     global posy
+    global step
+    global cost
+    global high_score
 
     def __init__(self):
         global game_state
@@ -37,6 +44,21 @@ class Main():
         pygame.display.set_caption(title)
         pygame.init()
         return screen
+    
+    def reset(self):
+        global game_state
+        global score
+        global posx
+        global posy
+        global step
+        global cost
+
+        game_state = 0
+        score = 0
+        posx = 310
+        posy = 80
+        step = 1
+        cost = round((step/0.4)*(step/0.4))
 
     def main_menu(self, screen):
         global game_state
@@ -98,6 +120,9 @@ class Main():
         global score
         global posx
         global posy
+        global step
+        global cost
+        global high_score
 
         clicker_button = Button(
             width = 100,
@@ -105,6 +130,17 @@ class Main():
             posx = posx,
             posy = posy,
             button_text = "Click",
+            border_color = (255,255,255),
+            fill_color = (0,0,0),
+            text_color = (255,255,255),
+            font_size = 25
+        )
+        upgrade_button = Button(
+            width = 500,
+            height = 30,
+            posx = 110,
+            posy = 40,
+            button_text = F"Upgrade - Cost {cost}",
             border_color = (255,255,255),
             fill_color = (0,0,0),
             text_color = (255,255,255),
@@ -124,20 +160,32 @@ class Main():
         font = pygame.font.SysFont("georgia", 20)
         screen.fill((0,0,0))
         scoretext = font.render(F"Score - {score}", True, (255,255,255))
+        high_scoretext = font.render(F"High Score - {high_score}", True, (255,255,255))
         screen.blit(scoretext, (360 - scoretext.get_width()/2, 10))
+        screen.blit(high_scoretext, (720 - high_scoretext.get_width(), 480 - high_scoretext.get_height()))
         clicker_button.render(screen)
         return_button.render(screen)
+        upgrade_button.render(screen)
         pygame.display.update()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_state = 2
             if clicker_button.clicked(event):
-                score += 1
+                score += step
                 posx = random.randrange(15, 720 - 115)
-                posy = random.randrange(50, 480 - 115)
+                posy = random.randrange(90, 480 - 115)
+                if high_score < score:
+                    high_score = score
             if return_button.clicked(event):
                 game_state = 0
+            if upgrade_button.clicked(event):
+                if score >= cost:
+                    score -= cost
+                    step += 1
+                    cost = round((step/0.4)*(step/0.4))
+            if mouse.get_pos()[1] > 80 and event.type == pygame.MOUSEBUTTONDOWN and not clicker_button.clicked(event):
+                self.reset()
     
     def how_to_menu(self, screen):
         global game_state

@@ -1,17 +1,21 @@
-from xml.dom.expatbuilder import parseFragmentString
 import pygame
 from pygame.locals import *
 import random
 from classes.Button import Button
-from pygame import mouse
+import os
+import settings
 
-game_state = 0
+game_state = 4
 score = 0
-posx = 310
-posy = 80
-step = 1
-cost = round((step/0.4)*(step/0.4))
+posx = settings.POSX
+posy = settings.POSY
+step = settings.STEP
+cost = settings.cost(step)
 high_score = 0
+width = settings.WIDTH
+height = settings.HEIGHT
+frame = 0
+di = os.path.dirname(__file__)
 
 class Main():
     global game_state
@@ -21,14 +25,21 @@ class Main():
     global step
     global cost
     global high_score
+    global frame
+    global di
 
     def __init__(self):
         global game_state
         global score
         global posx
         global posy
+        global high_score
+        self.clock = pygame.time.Clock()
+        self.fps = 30
+        high_score = self.load_score()
 
         while game_state != 2:
+            self.clock.tick(self.fps)
             WIDTH, HEIGHT = 720, 480
             screen = self.setup("Clicker Game", WIDTH, HEIGHT)
             
@@ -38,6 +49,10 @@ class Main():
                 self.play_screen(screen)
             if game_state == 3:
                 self.how_to_menu(screen)
+            if game_state == 4:
+                self.splash_screen(screen)
+            if game_state == 5:
+                self.end_menu(screen)
 
     def setup(self, title, width, height):
         screen = pygame.display.set_mode((width, height))
@@ -45,20 +60,52 @@ class Main():
         pygame.init()
         return screen
     
+    def load_score(self):
+        global di
+
+        highscore = 0
+        di = os.path.dirname(__file__)
+        with open(os.path.join(di, "score.txt"), 'r') as f:
+            try:
+                highscore = int(f.read())
+            except:
+                highscore = 0
+        return highscore
+    
+    def write_score(self, score):
+        global di
+
+        with open(os.path.join(di, "score.txt"), 'w') as f:
+            f.write(str(score))
+    
     def reset(self):
         global game_state
-        global score
         global posx
         global posy
         global step
         global cost
 
         game_state = 0
-        score = 0
         posx = 310
         posy = 80
         step = 1
-        cost = round((step/0.4)*(step/0.4))
+        cost = settings.cost(step)
+    
+    def splash_screen(self, screen):
+        global frame
+        global game_state
+        frame += 1
+        if frame == 45:
+            game_state = 0
+        screen.fill((0,0,0))
+        font = pygame.font.SysFont("georgia", 40)
+        text = font.render("ImpassiveDevelopement", True, (255,255,255))
+        screen.blit(text, (360 - text.get_width()/2, 240 - text.get_height() / 2))
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_state = 2
 
     def main_menu(self, screen):
         global game_state
@@ -123,6 +170,8 @@ class Main():
         global step
         global cost
         global high_score
+        global width
+        global height
 
         clicker_button = Button(
             width = 100,
@@ -163,6 +212,12 @@ class Main():
         high_scoretext = font.render(F"High Score - {high_score}", True, (255,255,255))
         screen.blit(scoretext, (360 - scoretext.get_width()/2, 10))
         screen.blit(high_scoretext, (720 - high_scoretext.get_width(), 480 - high_scoretext.get_height()))
+        height -= settings.DECREASE
+        width -= settings.DECREASE
+        if width < settings.MIN + settings.DECREASE:
+            width = settings.MIN
+            height = settings.MIN
+        clicker_button.resize(width, height)
         clicker_button.render(screen)
         return_button.render(screen)
         upgrade_button.render(screen)
@@ -177,15 +232,64 @@ class Main():
                 posy = random.randrange(90, 480 - 115)
                 if high_score < score:
                     high_score = score
+                width = 100
+                height = 100
             if return_button.clicked(event):
                 game_state = 0
             if upgrade_button.clicked(event):
                 if score >= cost:
                     score -= cost
-                    step += 1
-                    cost = round((step/0.4)*(step/0.4))
-            if mouse.get_pos()[1] > 80 and event.type == pygame.MOUSEBUTTONDOWN and not clicker_button.clicked(event):
+                    step += settings.STEP_INCREASE
+                    cost = settings.cost(step)
+            if pygame.mouse.get_pos()[1] > 80 and event.type == pygame.MOUSEBUTTONDOWN and not clicker_button.clicked(event):
+                game_state = 5
+    
+    def end_menu(self, screen):
+        global game_state
+        global score
+        global high_score
+
+        menu_button = Button(
+            width = 500,
+            height = 30,
+            posx = 110,
+            posy = 400,
+            button_text = "Go Back to Menu",
+            border_color = (255,255,255),
+            fill_color = (0,0,0),
+            text_color = (255,255,255),
+            font_size = 25
+        )
+        play_button = Button(
+            width = 500,
+            height = 30,
+            posx = 110,
+            posy = 440,
+            button_text = "Play Again",
+            border_color = (255,255,255),
+            fill_color = (0,0,0),
+            text_color = (255,255,255),
+            font_size = 25
+        )
+        font = pygame.font.SysFont("georgia", 30)
+        txt = font.render(F"You Lost! Score - {score}", True, (255,255,255))
+        txt2 = font.render(F"High Score - {high_score}", True, (255,255,255))
+        screen.blit(txt, (360 - txt.get_width()/2, 10))
+        screen.blit(txt2, (360 - txt2.get_width()/2, 50))
+        menu_button.render(screen)
+        play_button.render(screen)
+        pygame.display.update()
+        score = 0
+        self.write_score(high_score)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game_state = 2
+            if play_button.clicked(event):
                 self.reset()
+                game_state = 1
+            if menu_button.clicked(event):
+               self.reset()
     
     def how_to_menu(self, screen):
         global game_state

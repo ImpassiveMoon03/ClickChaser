@@ -10,6 +10,7 @@ class Button:
         if self.button_text is not None:
             if font_size is None:
                 font_size = 32
+            self.font_size = font_size
             self.font = pygame.font.SysFont("georgia", font_size)
             self.textbox = self.font.render(button_text, True, (text_color))
         else:
@@ -49,3 +50,12 @@ class Button:
         self.border = pygame.Rect(posx, posy, self.width, self.height)
         self.posx = posx
         self.posy = posy
+    
+    def resize(self, width, height):
+        self.rect = pygame.Rect(self.posx, self.posy, width, height)
+        self.border = pygame.Rect(self.posx, self.posy, width, height)
+        self.width = width
+        self.height = height
+        self.font_size = self.width / 4
+        self.font = pygame.font.SysFont("georgia", round(self.font_size))
+        self.textbox = self.font.render(self.button_text, True, (self.text_color))

@@ -1,6 +1,6 @@
 # ClickChaser
 ## About the Project
-ClickChaser is a very basic Clicker game I made as my first ever PyGame project<br/>**Version** - v1.0.0
+ClickChaser is a very basic Clicker game I made as my first ever PyGame project<br/>**Version** - v1.2.0
 
 ## Prerequisites
 You must have python3 setup on your system, and PyGame installed using pip3
@@ -34,3 +34,9 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 - Added scoring upgrade mechanic
 - Added failure mechanic
 - Added high score mechanic
+### v1.2.0
+- Added splash screen
+- Added lose screen
+- Stored high score in txt file
+- Made the box get smaller as time goes on
+- Added settings.py to configure game settings
